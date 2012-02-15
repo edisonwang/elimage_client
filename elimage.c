@@ -35,9 +35,13 @@
 
 char *elimage_url = ELIMAGE_URL;
 
-void help(char *argv)
+void usage(char *argv)
 {
-    printf("Usage :\n    %s <imagename> [-u] <remote url> \nFor default using elimage.edisonnotes.com \nExample: %s imagefile \n         %s imagefile -u img.vim-cn.com\n",argv,argv, argv);
+    printf("Usage :\n");
+    printf("%s <imagename> [-u] <remote url> \n", argv);
+    printf("For default using elimage.edisonnotes.com \n");
+    printf("Example: %s imagefile \n", argv);
+    printf("         %s imagefile -u img.vim-cn.com\n", argv);
 
 }
 int find_url(int argc , char *argv[])
@@ -49,48 +53,15 @@ int find_url(int argc , char *argv[])
     }
     return -1;
 }
-
+int check_file(char* file)
+{
+     return access( file , 0 );
+}
 int main(int argc, char *argv[])
 {
     int url_pointer;
     int file_pointer = 1;
 
-    switch(argc){
-        case 1:
-            help(argv[0]);
-            return 1;
-            break;
-        case 2:
-            if( (access( argv[file_pointer] , 0 )) == -1 )
-            {
-                printf ("File %s not found \n", argv[1]);
-                help(argv[0]);
-                return 1;
-            }
-            break;
-        case 4:
-            url_pointer = find_url(argc,argv);
-            if (url_pointer == -1 || argv[url_pointer]  == NULL)
-            {
-                help(argv[0]);
-                return -1;
-            }
-            elimage_url = argv[url_pointer];
-            if (url_pointer == 2)
-            {
-                file_pointer = 3;
-            }
-            if( (access( argv[file_pointer] , 0 )) == -1 )
-            {  
-                printf ("File %s not found \n", argv[file_pointer]);
-                help(argv[0]);
-                return 1;
-            }
-            break;
-        default:
-            help(argv[0]);
-            return 1;
-    }
     CURL *curl;
     CURLcode res;
 
@@ -98,6 +69,43 @@ int main(int argc, char *argv[])
     struct curl_httppost *lastptr=NULL;
     struct curl_slist *headerlist=NULL;
     static const char buf[] = "Expect:";
+
+    switch(argc){
+        case 1:
+            usage(argv[0]);
+            return 1;
+            break;
+        case 2:
+            if( (check_file( argv[file_pointer] )) == -1 )
+            {
+                printf ("File %s not found \n", argv[file_pointer]);
+                usage(argv[0]);
+                return 1;
+            }
+            break;
+        case 4:
+            url_pointer = find_url(argc,argv);
+            if (url_pointer == -1 || argv[url_pointer]  == NULL)
+            {
+                usage(argv[0]);
+                return -1;
+            }
+            elimage_url = argv[url_pointer];
+            if (url_pointer == 2)
+            {
+                file_pointer = 3;
+            }
+            if( (check_file( argv[file_pointer] )) == -1 )
+            {  
+                printf ("File %s not found \n", argv[file_pointer]);
+                usage(argv[0]);
+                return 1;
+            }
+            break;
+        default:
+            usage(argv[0]);
+            return 1;
+    }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
