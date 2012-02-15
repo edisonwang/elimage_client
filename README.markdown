@@ -14,4 +14,4 @@ Written by Edison Wang
     elimage <imagename> [-u] <remote url> 
     For default using elimage.edisonnotes.com 
     Example: ./elimage imagefile 
-         ./elimage imagefile -u img.vim-cn.com
+             ./elimage imagefile -u img.vim-cn.com
