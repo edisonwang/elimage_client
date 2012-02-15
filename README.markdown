@@ -15,3 +15,7 @@ Written by Edison Wang
     For default using elimage.edisonnotes.com 
     Example: ./elimage imagefile 
              ./elimage imagefile -u img.vim-cn.com
+
+####Requirement
+
+1. libcurl:[http://curl.haxx.se/libcurl/](http://curl.haxx.se/libcurl/)
