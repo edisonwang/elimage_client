@@ -1,6 +1,6 @@
 CC=gcc
-# using libcurl
-CFLAGS=-lcurl 
+# using libcurl uncomment # in below to use img.vim-cn.com for default
+CFLAGS=-lcurl -DELIMAGE_URL=\"img.vim\-cn.com\"
 
 all: elimage
 
