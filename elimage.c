@@ -29,19 +29,25 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <curl/curl.h>
-#define ELIMAGE_URL "http://elimage.edisonnotes.com"
+
+#ifndef ELIMAGE_URL
+    #define ELIMAGE_URL "http://elimage.edisonnotes.com"
+#endif
 
 char *elimage_url = ELIMAGE_URL;
 
 void usage(char *argv)
 {
     printf("Usage :\n");
-    printf("%s <imagename> [-u] <remote url> \n", argv);
+    printf("%s [-u <remote url> ] <image file list>\n", argv);
     printf("For default using elimage.edisonnotes.com \n");
-    printf("Example: %s imagefile \n", argv);
-    printf("         %s imagefile -u img.vim-cn.com\n", argv);
+    printf("Example: %s imagefile1 imagefile2 \n", argv);
+    printf("         %s -u img.vim-cn.com imagefile1 inamefile2\n", argv);
 
 }
 int find_url(int argc , char *argv[])
@@ -57,10 +63,48 @@ int check_file(char* file)
 {
      return access( file , 0 );
 }
+int self_check_opt(int argc, char *argv[]){
+    int c;
+    if (argc == 1)
+    {
+        usage(argv[0]);
+        return 1;
+    }
+    opterr = 0;
+
+    while ((c = getopt (argc, argv, "hu:")) != -1)
+        switch (c)
+        {   
+            case 'h':
+                usage(argv[0]);
+                return 1;
+            case 'u':
+                elimage_url = optarg;
+                break;
+            case '?':
+                if (optopt == 'u')
+                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+                else if (isprint (optopt))
+                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf (stderr,
+                            "Unknown option character `\\x%x'.\n",
+                            optopt);
+                
+                return 1;
+            default:
+                abort ();
+        }
+
+    printf ("Using site : %s\n", elimage_url);
+
+    return 0;
+}
 int main(int argc, char *argv[])
 {
-    int url_pointer;
-    int file_pointer = 1;
+
+    int index = 0;
+    int file_counter= 0;
 
     CURL *curl;
     CURLcode res;
@@ -70,51 +114,34 @@ int main(int argc, char *argv[])
     struct curl_slist *headerlist=NULL;
     static const char buf[] = "Expect:";
 
-    switch(argc){
-        case 1:
-            usage(argv[0]);
-            return 1;
-            break;
-        case 2:
-            if( (check_file( argv[file_pointer] )) == -1 )
-            {
-                printf ("File %s not found \n", argv[file_pointer]);
-                usage(argv[0]);
-                return 1;
-            }
-            break;
-        case 4:
-            url_pointer = find_url(argc,argv);
-            if (url_pointer == -1 || argv[url_pointer]  == NULL)
-            {
-                usage(argv[0]);
-                return -1;
-            }
-            elimage_url = argv[url_pointer];
-            if (url_pointer == 2)
-            {
-                file_pointer = 3;
-            }
-            if( (check_file( argv[file_pointer] )) == -1 )
-            {  
-                printf ("File %s not found \n", argv[file_pointer]);
-                usage(argv[0]);
-                return 1;
-            }
-            break;
-        default:
-            usage(argv[0]);
-            return 1;
+    if( self_check_opt(argc, argv) != 0 )
+    {
+        return 1;
     }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    /* Fill in the file upload field */
-    curl_formadd(&formpost,
-            &lastptr,
-            CURLFORM_COPYNAME, "sendfile",
-            CURLFORM_FILE, argv[file_pointer],
-            CURLFORM_END);
+    for (index = optind; index < argc; index++){
+        if(check_file(argv[index]))
+        {
+            fprintf (stderr, "File not found:  %s\n", argv[index]);
+            usage(argv[0]);
+            return 1;
+        } else {
+            /* Fill in the file upload field */
+            curl_formadd(&formpost,
+                    &lastptr,
+                    CURLFORM_COPYNAME, "sendfile",
+                    CURLFORM_FILE, argv[index],
+                    CURLFORM_END);
+        }
+        file_counter++;
+    }
+    if (file_counter == 0)
+    {
+        usage(argv[0]);
+        return 1;
+    }
 
     curl = curl_easy_init();
     /* initalize custom header list (stating that Expect: 100-continue is not

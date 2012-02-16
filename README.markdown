@@ -11,10 +11,10 @@ Written by Edison Wang
 
 ####Usage 
 
-    elimage <imagename> [-u] <remote url> 
+    ./elimage [-u <remote url> ] <image file list>
     For default using elimage.edisonnotes.com 
-    Example: ./elimage imagefile 
-             ./elimage imagefile -u img.vim-cn.com
+    Example: ./elimage imagefile1 imagefile2 
+             ./elimage -u img.vim-cn.com imagefile1 inamefile2
 
 ####Requirement
 
